@@ -5,6 +5,6 @@ from .views import ActionItemViewSet, CompletedActionItemListView
 router = DefaultRouter()
 router.register(r'action-items', ActionItemViewSet, basename='actionitem')
 
-urlpatterns = router.urls + [
+urlpatterns = [
     path('action-items/completed/', CompletedActionItemListView.as_view(), name='completed-action-items'),
-]
+] + router.urls
