@@ -8,6 +8,8 @@ Backend for the Hyphen take-home assessment: an MVP that helps teams capture mee
 - SQLite (local dev) — designed to run on PostgreSQL in production, no code changes required beyond `DATABASES` config
 
 ## Setup
+
+```
 git clone https://github.com/BenyaminMahamed/hyphen-mvp-backend.git
 cd hyphen-mvp-backend
 py -m venv venv
@@ -16,6 +18,7 @@ pip install -r requirements.txt
 py manage.py migrate
 py manage.py createsuperuser
 py manage.py runserver
+```
 
 After creating a superuser, log into `/admin/` and create at least one `Team` and a `Profile` (linking your user to that team with a role of `manager` or `member`) before using the API — a `Profile` is required for permission checks to resolve.
 
