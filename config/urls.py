@@ -22,4 +22,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/login/', obtain_auth_token, name='api-login'),
     path('api/', include('meetings.urls')),
+    path('api/', include('actions.urls')),
 ]
