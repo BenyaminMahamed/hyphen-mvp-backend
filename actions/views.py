@@ -1,3 +1,4 @@
+from django.utils import timezone
 from rest_framework import viewsets, permissions, generics
 from rest_framework.exceptions import PermissionDenied
 from .models import ActionItem
@@ -19,6 +20,7 @@ class ActionItemViewSet(viewsets.ModelViewSet):
         user = self.request.user
 
         new_owner = serializer.validated_data.get("owner", instance.owner)
+        new_status = serializer.validated_data.get("status", instance.status)
         is_reassignment = new_owner != instance.owner
         other_fields_changed = any(
             key != "owner" and getattr(instance, key) != value
@@ -31,7 +33,12 @@ class ActionItemViewSet(viewsets.ModelViewSet):
             if is_reassignment and user.profile.role != "manager":
                 raise PermissionDenied("Only managers can reassign completed actions.")
 
-        serializer.save()
+        if new_status == "completed" and instance.status != "completed":
+            serializer.save(completed_at=timezone.now())
+        elif new_status != "completed" and instance.status == "completed":
+            serializer.save(completed_at=None)
+        else:
+            serializer.save()
 
 
 class CompletedActionItemListView(generics.ListAPIView):
