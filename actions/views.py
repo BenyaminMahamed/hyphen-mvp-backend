@@ -1,4 +1,4 @@
-from rest_framework import viewsets, permissions
+from rest_framework import viewsets, permissions, generics
 from rest_framework.exceptions import PermissionDenied
 from .models import ActionItem
 from .serializers import ActionItemSerializer
@@ -18,11 +18,28 @@ class ActionItemViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         user = self.request.user
 
-        if instance.status == "completed":
-            raise PermissionDenied("Completed action items cannot be edited.")
-
         new_owner = serializer.validated_data.get("owner", instance.owner)
-        if new_owner != instance.owner and instance.status == "completed" and user.profile.role != "manager":
-            raise PermissionDenied("Only managers can reassign completed actions.")
+        is_reassignment = new_owner != instance.owner
+        other_fields_changed = any(
+            key != "owner" and getattr(instance, key) != value
+            for key, value in serializer.validated_data.items()
+        )
+
+        if instance.status == "completed":
+            if other_fields_changed:
+                raise PermissionDenied("Completed action items cannot be edited.")
+            if is_reassignment and user.profile.role != "manager":
+                raise PermissionDenied("Only managers can reassign completed actions.")
 
         serializer.save()
+
+
+class CompletedActionItemListView(generics.ListAPIView):
+    """
+    Outgoing API for another internal system to retrieve completed action items.
+    No manager/member visibility filtering — this is a system-to-system feed,
+    not a user-facing endpoint, so it returns all completed items.
+    """
+    serializer_class = ActionItemSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    queryset = ActionItem.objects.filter(status="completed")
